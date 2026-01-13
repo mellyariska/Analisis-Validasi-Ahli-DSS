@@ -15,7 +15,7 @@ st.set_page_config(
 # ======================
 # LOAD DATA
 # ======================
-df = pd.read_excel("data/data_survei.xlsx")
+df = pd.read_excel("Data_survei.xlsx")
 
 # ======================
 # HEADER + GAMBAR
@@ -109,3 +109,4 @@ st.success(
     "Hal ini menunjukkan bahwa hasil evaluasi dashboard "
     "didukung oleh partisipasi yang beragam dan representatif."
 )
+
