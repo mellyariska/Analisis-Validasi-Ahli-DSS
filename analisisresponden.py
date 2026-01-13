@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
+import os
 
 # ======================
 # KONFIGURASI HALAMAN
@@ -13,20 +14,34 @@ st.set_page_config(
 )
 
 # ======================
-# LOAD DATA
+# PATH AMAN (ANTI ERROR)
 # ======================
-df = pd.read_excel("Data_survei.xlsx")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATA_PATH = os.path.join(BASE_DIR, "Data_survei.xlsx")
+IMAGE_PATH = os.path.join(BASE_DIR, "assets", "survey.png")
 
 # ======================
-# HEADER + GAMBAR
+# LOAD DATA
+# ======================
+df = pd.read_excel(DATA_PATH)
+
+# ======================
+# HEADER
 # ======================
 st.markdown("""
 # 📊 Dashboard Analisis Deskriptif Responden
 Visualisasi partisipasi dan latar belakang responden survei
 """)
 
-image = Image.open("assets/survey.png")
-st.image(image, use_container_width=True)
+# ======================
+# GAMBAR (AMAN – TIDAK WAJIB ADA)
+# ======================
+if os.path.exists(IMAGE_PATH):
+    image = Image.open(IMAGE_PATH)
+    st.image(image, use_container_width=True)
+else:
+    st.info("🖼️ Gambar ilustrasi belum tersedia (assets/survey.png)")
 
 st.divider()
 
@@ -99,7 +114,6 @@ if "Pengalaman" in df.columns:
 # INSIGHT OTOMATIS
 # ======================
 st.divider()
-
 st.subheader("🧠 Insight Utama")
 
 st.success(
@@ -109,4 +123,3 @@ st.success(
     "Hal ini menunjukkan bahwa hasil evaluasi dashboard "
     "didukung oleh partisipasi yang beragam dan representatif."
 )
-
