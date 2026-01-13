@@ -122,16 +122,22 @@ with col4:
 # =========================
 st.subheader("👍 Kesediaan Rekomendasi Pengguna")
 
-rekom = df[
-    "Apakah Anda bersedia merekomendasikan dashboard ini kepada institusi Anda?"
-].value_counts()
+col_rekom = "Apakah Anda bersedia merekomendasikan dashboard ini kepada institusi Anda?"
 
-fig, ax = plt.subplots()
-ax.bar(rekom.index, rekom.values)
-ax.set_xlabel("Jawaban")
-ax.set_ylabel("Jumlah Responden")
-ax.set_title("Kesediaan Rekomendasi Pengguna")
-st.pyplot(fig)
+if col_rekom in df.columns:
+    rekom = df[col_rekom].dropna().astype(str).value_counts()
+
+    if len(rekom) > 0:
+        fig, ax = plt.subplots()
+        ax.bar(rekom.index, rekom.values)
+        ax.set_xlabel("Jawaban")
+        ax.set_ylabel("Jumlah Responden")
+        ax.set_title("Kesediaan Rekomendasi Pengguna")
+        st.pyplot(fig)
+    else:
+        st.warning("Data rekomendasi tersedia, namun tidak ada jawaban yang diisi.")
+else:
+    st.error("Kolom pertanyaan rekomendasi tidak ditemukan dalam data survei.")
 
 # =========================
 # 8️⃣ KRITIK & SARAN
@@ -147,3 +153,4 @@ if len(feedback) > 0:
         st.write(f"{i}. {text}")
 else:
     st.info("Tidak ada kritik dan saran yang diisi responden.")
+
