@@ -14,10 +14,9 @@ st.set_page_config(
 )
 
 # ======================
-# PATH AMAN (ANTI ERROR)
+# PATH AMAN
 # ======================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 DATA_PATH = os.path.join(BASE_DIR, "Data_survei.xlsx")
 IMAGE_PATH = os.path.join(BASE_DIR, "assets", "survey.png")
 
@@ -25,6 +24,22 @@ IMAGE_PATH = os.path.join(BASE_DIR, "assets", "survey.png")
 # LOAD DATA
 # ======================
 df = pd.read_excel(DATA_PATH)
+
+# 🔧 BERSIHKAN NAMA KOLOM (ANTI ERROR)
+df.columns = df.columns.str.strip().str.lower()
+
+# ======================
+# FUNGSI CARI KOLOM AMAN
+# ======================
+def find_column(possible_names):
+    for col in df.columns:
+        if col in possible_names:
+            return col
+    return None
+
+kolom_profesi = find_column(["profesi", "pekerjaan", "role", "jabatan"])
+kolom_instansi = find_column(["instansi", "institusi", "unit kerja", "lembaga"])
+kolom_pengalaman = find_column(["pengalaman", "lama kerja", "experience"])
 
 # ======================
 # HEADER
@@ -35,18 +50,17 @@ Visualisasi partisipasi dan latar belakang responden survei
 """)
 
 # ======================
-# GAMBAR (AMAN – TIDAK WAJIB ADA)
+# GAMBAR (AMAN)
 # ======================
 if os.path.exists(IMAGE_PATH):
-    image = Image.open(IMAGE_PATH)
-    st.image(image, use_container_width=True)
+    st.image(Image.open(IMAGE_PATH), use_container_width=True)
 else:
     st.info("🖼️ Gambar ilustrasi belum tersedia (assets/survey.png)")
 
 st.divider()
 
 # ======================
-# KPI SUMMARY
+# KPI SUMMARY (AMAN)
 # ======================
 col1, col2, col3, col4 = st.columns(4)
 
@@ -54,16 +68,23 @@ with col1:
     st.metric("👥 Total Responden", len(df))
 
 with col2:
-    st.metric("🧑‍💼 Jenis Profesi", df["Profesi"].nunique())
+    if kolom_profesi:
+        st.metric("🧑‍💼 Jenis Profesi", df[kolom_profesi].nunique())
+    else:
+        st.metric("🧑‍💼 Jenis Profesi", "Tidak tersedia")
 
 with col3:
-    st.metric("🏢 Instansi Terlibat", df["Instansi"].nunique())
+    if kolom_instansi:
+        st.metric("🏢 Instansi Terlibat", df[kolom_instansi].nunique())
+    else:
+        st.metric("🏢 Instansi Terlibat", "Tidak tersedia")
 
 with col4:
-    tingkat_diversitas = round(
-        (df["Profesi"].nunique() / len(df)) * 100, 1
-    )
-    st.metric("🌍 Indeks Keberagaman (%)", tingkat_diversitas)
+    if kolom_profesi:
+        indeks = round((df[kolom_profesi].nunique() / len(df)) * 100, 1)
+        st.metric("🌍 Indeks Keberagaman (%)", indeks)
+    else:
+        st.metric("🌍 Indeks Keberagaman (%)", "-")
 
 st.divider()
 
@@ -76,39 +97,45 @@ colA, colB = st.columns(2)
 
 # PIE PROFESI
 with colA:
-    profesi = df["Profesi"].value_counts()
-    fig1, ax1 = plt.subplots()
-    ax1.pie(
-        profesi,
-        labels=profesi.index,
-        autopct="%1.1f%%",
-        startangle=90
-    )
-    ax1.set_title("Distribusi Profesi Responden")
-    st.pyplot(fig1)
+    if kolom_profesi:
+        data_profesi = df[kolom_profesi].value_counts()
+        fig, ax = plt.subplots()
+        ax.pie(
+            data_profesi,
+            labels=data_profesi.index,
+            autopct="%1.1f%%",
+            startangle=90
+        )
+        ax.set_title("Distribusi Profesi Responden")
+        st.pyplot(fig)
+    else:
+        st.warning("Data profesi tidak tersedia")
 
 # BAR INSTANSI
 with colB:
-    instansi = df["Instansi"].value_counts()
-    fig2, ax2 = plt.subplots()
-    instansi.plot(kind="bar", ax=ax2)
-    ax2.set_title("Distribusi Instansi Responden")
-    ax2.set_xlabel("Instansi")
-    ax2.set_ylabel("Jumlah")
-    st.pyplot(fig2)
+    if kolom_instansi:
+        data_instansi = df[kolom_instansi].value_counts()
+        fig, ax = plt.subplots()
+        data_instansi.plot(kind="bar", ax=ax)
+        ax.set_title("Distribusi Instansi Responden")
+        ax.set_xlabel("Instansi")
+        ax.set_ylabel("Jumlah")
+        st.pyplot(fig)
+    else:
+        st.warning("Data instansi tidak tersedia")
 
 # ======================
 # PENGALAMAN
 # ======================
-if "Pengalaman" in df.columns:
+if kolom_pengalaman:
     st.subheader("📈 Pengalaman Responden")
-    pengalaman = df["Pengalaman"].value_counts().sort_index()
-    fig3, ax3 = plt.subplots()
-    pengalaman.plot(kind="bar", ax=ax3)
-    ax3.set_xlabel("Pengalaman")
-    ax3.set_ylabel("Jumlah Responden")
-    ax3.set_title("Distribusi Pengalaman Responden")
-    st.pyplot(fig3)
+    data_pengalaman = df[kolom_pengalaman].value_counts().sort_index()
+    fig, ax = plt.subplots()
+    data_pengalaman.plot(kind="bar", ax=ax)
+    ax.set_xlabel("Pengalaman")
+    ax.set_ylabel("Jumlah Responden")
+    ax.set_title("Distribusi Pengalaman Responden")
+    st.pyplot(fig)
 
 # ======================
 # INSIGHT OTOMATIS
@@ -117,9 +144,8 @@ st.divider()
 st.subheader("🧠 Insight Utama")
 
 st.success(
-    f"Survei ini melibatkan {len(df)} responden dengan latar belakang "
-    f"{df['Profesi'].nunique()} jenis profesi dan "
-    f"{df['Instansi'].nunique()} instansi berbeda. "
-    "Hal ini menunjukkan bahwa hasil evaluasi dashboard "
-    "didukung oleh partisipasi yang beragam dan representatif."
+    f"Survei ini melibatkan {len(df)} responden. "
+    "Dashboard menampilkan analisis deskriptif berdasarkan data yang tersedia, "
+    "menunjukkan bahwa evaluasi sistem didukung oleh partisipasi responden "
+    "yang memadai dan representatif."
 )
