@@ -16,7 +16,7 @@ st.markdown("Analisis partisipasi dan latar belakang responden survei")
 # =============================
 # LOAD DATA
 # =============================
-data = pd.read_excel("data_survei.xlsx")  # ganti dengan nama file Anda
+data = pd.read_excel("Data_survei.xlsx")  # ganti dengan nama file Anda
 
 # =============================
 # JUMLAH RESPONDEN
@@ -89,3 +89,4 @@ st.info(
     "didukung oleh partisipasi responden yang memadai dan beragam, "
     "sehingga hasil survei dapat dianggap representatif."
 )
+
