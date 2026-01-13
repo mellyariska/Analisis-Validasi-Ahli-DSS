@@ -1,92 +1,111 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+from PIL import Image
 
-# =============================
+# ======================
 # KONFIGURASI HALAMAN
-# =============================
+# ======================
 st.set_page_config(
-    page_title="Analisis Deskriptif Responden",
+    page_title="Dashboard Analisis Responden",
+    page_icon="📊",
     layout="wide"
 )
 
-st.title("📊 Analisis Deskriptif Responden")
-st.markdown("Analisis partisipasi dan latar belakang responden survei")
-
-# =============================
+# ======================
 # LOAD DATA
-# =============================
-data = pd.read_excel("Data_survei.xlsx")  # ganti dengan nama file Anda
+# ======================
+df = pd.read_excel("data/data_survei.xlsx")
 
-# =============================
-# JUMLAH RESPONDEN
-# =============================
-total_responden = len(data)
+# ======================
+# HEADER + GAMBAR
+# ======================
+st.markdown("""
+# 📊 Dashboard Analisis Deskriptif Responden
+Visualisasi partisipasi dan latar belakang responden survei
+""")
 
-st.metric(
-    label="👥 Jumlah Responden",
-    value=total_responden
-)
+image = Image.open("assets/survey.png")
+st.image(image, use_container_width=True)
 
 st.divider()
 
-# =============================
-# FUNGSI ANALISIS KATEGORI
-# =============================
-def analisis_kategori(kolom, judul):
-    st.subheader(f"🔹 Distribusi {judul}")
-    
-    distribusi = data[kolom].value_counts().reset_index()
-    distribusi.columns = [judul, "Jumlah"]
-    
-    col1, col2 = st.columns(2)
-    
-    # TABEL
-    with col1:
-        st.markdown("**Tabel Ringkasan**")
-        st.dataframe(distribusi, use_container_width=True)
-    
-    # GRAFIK
-    with col2:
-        fig, ax = plt.subplots()
-        ax.pie(
-            distribusi["Jumlah"],
-            labels=distribusi[judul],
-            autopct='%1.1f%%',
-            startangle=90
-        )
-        ax.set_title(f"Diagram Pie {judul}")
-        st.pyplot(fig)
+# ======================
+# KPI SUMMARY
+# ======================
+col1, col2, col3, col4 = st.columns(4)
 
-# =============================
-# ANALISIS LATAR BELAKANG
-# =============================
+with col1:
+    st.metric("👥 Total Responden", len(df))
 
-if "Profesi" in data.columns:
-    analisis_kategori("Profesi", "Profesi Responden")
+with col2:
+    st.metric("🧑‍💼 Jenis Profesi", df["Profesi"].nunique())
 
-if "Instansi" in data.columns:
-    analisis_kategori("Instansi", "Instansi Responden")
+with col3:
+    st.metric("🏢 Instansi Terlibat", df["Instansi"].nunique())
 
-if "Pengalaman" in data.columns:
-    st.subheader("🔹 Distribusi Pengalaman Responden")
-    
-    pengalaman = data["Pengalaman"].value_counts().sort_index()
-    
-    fig, ax = plt.subplots()
-    pengalaman.plot(kind="bar", ax=ax)
-    ax.set_xlabel("Pengalaman")
-    ax.set_ylabel("Jumlah Responden")
-    ax.set_title("Diagram Batang Pengalaman Responden")
-    
-    st.pyplot(fig)
+with col4:
+    tingkat_diversitas = round(
+        (df["Profesi"].nunique() / len(df)) * 100, 1
+    )
+    st.metric("🌍 Indeks Keberagaman (%)", tingkat_diversitas)
 
-# =============================
-# CATATAN INTERPRETASI
-# =============================
-st.info(
-    "Analisis ini menunjukkan bahwa hasil evaluasi dashboard "
-    "didukung oleh partisipasi responden yang memadai dan beragam, "
-    "sehingga hasil survei dapat dianggap representatif."
+st.divider()
+
+# ======================
+# PROFIL RESPONDEN
+# ======================
+st.subheader("📌 Profil Responden")
+
+colA, colB = st.columns(2)
+
+# PIE PROFESI
+with colA:
+    profesi = df["Profesi"].value_counts()
+    fig1, ax1 = plt.subplots()
+    ax1.pie(
+        profesi,
+        labels=profesi.index,
+        autopct="%1.1f%%",
+        startangle=90
+    )
+    ax1.set_title("Distribusi Profesi Responden")
+    st.pyplot(fig1)
+
+# BAR INSTANSI
+with colB:
+    instansi = df["Instansi"].value_counts()
+    fig2, ax2 = plt.subplots()
+    instansi.plot(kind="bar", ax=ax2)
+    ax2.set_title("Distribusi Instansi Responden")
+    ax2.set_xlabel("Instansi")
+    ax2.set_ylabel("Jumlah")
+    st.pyplot(fig2)
+
+# ======================
+# PENGALAMAN
+# ======================
+if "Pengalaman" in df.columns:
+    st.subheader("📈 Pengalaman Responden")
+    pengalaman = df["Pengalaman"].value_counts().sort_index()
+    fig3, ax3 = plt.subplots()
+    pengalaman.plot(kind="bar", ax=ax3)
+    ax3.set_xlabel("Pengalaman")
+    ax3.set_ylabel("Jumlah Responden")
+    ax3.set_title("Distribusi Pengalaman Responden")
+    st.pyplot(fig3)
+
+# ======================
+# INSIGHT OTOMATIS
+# ======================
+st.divider()
+
+st.subheader("🧠 Insight Utama")
+
+st.success(
+    f"Survei ini melibatkan {len(df)} responden dengan latar belakang "
+    f"{df['Profesi'].nunique()} jenis profesi dan "
+    f"{df['Instansi'].nunique()} instansi berbeda. "
+    "Hal ini menunjukkan bahwa hasil evaluasi dashboard "
+    "didukung oleh partisipasi yang beragam dan representatif."
 )
-
