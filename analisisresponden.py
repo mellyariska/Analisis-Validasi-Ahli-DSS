@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import plotly.express as px
 import numpy as np
 
 # =========================
@@ -35,16 +34,13 @@ st.divider()
 st.subheader("📌 Distribusi Skor Likert")
 
 likert_data = df[likert_cols].values.flatten()
-likert_series = pd.Series(likert_data)
 
-fig_likert = px.histogram(
-    likert_series,
-    x=likert_series,
-    nbins=5,
-    labels={"x": "Skor Likert", "y": "Jumlah Responden"},
-    title="Distribusi Skor Likert Keseluruhan"
-)
-st.plotly_chart(fig_likert, use_container_width=True)
+fig, ax = plt.subplots()
+ax.hist(likert_data, bins=[1,2,3,4,5,6])
+ax.set_xlabel("Skor Likert")
+ax.set_ylabel("Jumlah Responden")
+ax.set_title("Distribusi Skor Likert Keseluruhan")
+st.pyplot(fig)
 
 # =========================
 # 3️⃣ RATA-RATA PER INDIKATOR
@@ -53,44 +49,43 @@ st.subheader("📊 Rata-rata Penilaian per Indikator")
 
 mean_scores = df[likert_cols].mean().sort_values()
 
-fig_mean = px.bar(
-    mean_scores,
-    orientation="h",
-    labels={"value": "Skor Rata-rata", "index": "Indikator"},
-    title="Rata-rata Skor per Indikator"
-)
-st.plotly_chart(fig_mean, use_container_width=True)
+fig, ax = plt.subplots(figsize=(8,6))
+ax.barh(mean_scores.index, mean_scores.values)
+ax.set_xlabel("Skor Rata-rata")
+ax.set_title("Rata-rata Skor per Indikator")
+st.pyplot(fig)
 
 # =========================
 # 4️⃣ RADAR CHART KUALITAS SISTEM
 # =========================
 st.subheader("🕸️ Profil Kualitas Sistem (Radar Chart)")
 
-radar_df = pd.DataFrame({
-    "Indikator": mean_scores.index,
-    "Skor": mean_scores.values
-})
+labels = mean_scores.index.tolist()
+scores = mean_scores.values.tolist()
+scores += scores[:1]
 
-fig_radar = px.line_polar(
-    radar_df,
-    r="Skor",
-    theta="Indikator",
-    line_close=True,
-    title="Radar Chart Kualitas Sistem"
-)
-fig_radar.update_traces(fill="toself")
-st.plotly_chart(fig_radar, use_container_width=True)
+angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
+angles += angles[:1]
+
+fig, ax = plt.subplots(figsize=(6,6), subplot_kw=dict(polar=True))
+ax.plot(angles, scores, linewidth=2)
+ax.fill(angles, scores, alpha=0.25)
+ax.set_thetagrids(np.degrees(angles[:-1]), labels)
+ax.set_title("Radar Chart Kualitas Sistem")
+st.pyplot(fig)
 
 # =========================
 # 5️⃣ BOXPLOT KONSISTENSI PENILAIAN
 # =========================
 st.subheader("📦 Boxplot Konsistensi Penilaian")
 
-fig_box = px.box(
-    df[likert_cols],
-    title="Sebaran dan Konsistensi Penilaian Responden"
-)
-st.plotly_chart(fig_box, use_container_width=True)
+fig, ax = plt.subplots(figsize=(10,6))
+ax.boxplot(df[likert_cols].values, vert=False)
+ax.set_yticks(range(1, len(likert_cols)+1))
+ax.set_yticklabels(likert_cols)
+ax.set_xlabel("Skor")
+ax.set_title("Sebaran dan Konsistensi Penilaian Responden")
+st.pyplot(fig)
 
 # =========================
 # 6️⃣ PROFIL RESPONDEN
@@ -100,32 +95,32 @@ st.subheader("👤 Profil Responden")
 col3, col4 = st.columns(2)
 
 with col3:
-    fig_role = px.pie(
-        df,
-        names="  Peran/Jabatan",
-        title="Distribusi Peran/Jabatan"
-    )
-    st.plotly_chart(fig_role, use_container_width=True)
+    role_counts = df["  Peran/Jabatan"].value_counts()
+    fig, ax = plt.subplots()
+    ax.pie(role_counts, labels=role_counts.index, autopct='%1.1f%%')
+    ax.set_title("Distribusi Peran/Jabatan")
+    st.pyplot(fig)
 
 with col4:
-    fig_field = px.pie(
-        df,
-        names="Bidang Keahlian",
-        title="Distribusi Bidang Keahlian"
-    )
-    st.plotly_chart(fig_field, use_container_width=True)
+    field_counts = df["Bidang Keahlian"].value_counts()
+    fig, ax = plt.subplots()
+    ax.pie(field_counts, labels=field_counts.index, autopct='%1.1f%%')
+    ax.set_title("Distribusi Bidang Keahlian")
+    st.pyplot(fig)
 
 # =========================
 # 7️⃣ REKOMENDASI PENGGUNA
 # =========================
 st.subheader("👍 Kesediaan Rekomendasi Pengguna")
 
-fig_rekom = px.bar(
-    df["Apakah Anda bersedia merekomendasikan dashboard ini kepada institusi Anda?"].value_counts(),
-    labels={"value": "Jumlah Responden", "index": "Jawaban"},
-    title="Kesediaan Rekomendasi"
-)
-st.plotly_chart(fig_rekom, use_container_width=True)
+rekom = df["Apakah Anda bersedia merekomendasikan dashboard ini kepada institusi Anda?"].value_counts()
+
+fig, ax = plt.subplots()
+ax.bar(rekom.index, rekom.values)
+ax.set_xlabel("Jawaban")
+ax.set_ylabel("Jumlah Responden")
+ax.set_title("Kesediaan Rekomendasi Pengguna")
+st.pyplot(fig)
 
 # =========================
 # 8️⃣ KRITIK & SARAN
